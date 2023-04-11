@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>Document</title>
+    <!-- <script src="/public/index.js"></script> -->
+    <script src="//unpkg.com/string-similarity/umd/string-similarity.min.js"></script>
+    <link rel="stylesheet" href="main.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Chivo+Mono:wght@100;200;300;500;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="header">
+      <h1>Compare PDFs</h1>
+    </div>
+
+    <div class="pdfinput">
+      <div class="firstpdf">
+        <h4>1. Select first PDF and press "Upload"</h4>
+
+        <input type="file" id="inputFile" />
+        <button type="button" id="btnUpload">Upload</button>
+        <br />
+        <textarea
+          placeholder="Words from PDF file will be shown here"
+          id="resultText"
+        ></textarea>
+      </div>
+
+      <div class="secondpdf">
+        <h4>2. Select second PDF and press "Upload"</h4>
+
+        <input type="file" id="inputFileT" />
+        <button type="button" id="btnUploadT">Upload</button>
+        <br />
+        <textarea
+          placeholder="Words from PDF file will be shown here"
+          id="resultTextT"
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="resultcontainer">
+      <h4>
+        3. When you are ready, press compare and see the percentage of words
+        that matches both PDFs
+      </h4>
+      <button type="button" id="btnCompare">Compare</button>
+      <textarea id="percentageText" placeholder="results"></textarea>
+    </div>
+
+    <script>
+      const btnUpload = document.getElementById("btnUpload");
+      const inputFile = document.getElementById("inputFile");
+      const resultText = document.getElementById("resultText");
+
+      btnUpload.addEventListener("click", () => {
+        const formData = new FormData();
+        formData.append("pdfFile", inputFile.files[0]);
+        fetch("/extract-text", {
+          method: "post",
+          body: formData,
+        })
+          .then((response) => {
+            return response.text();
+          })
+          .then((extractedText) => {
+            resultText.value = extractedText.trim();
+          });
+      });
+
+      const btnUploadT = document.getElementById("btnUploadT");
+      const inputFileT = document.getElementById("inputFileT");
+      const resultTextT = document.getElementById("resultTextT");
+      const percentageText = document.getElementById("percentageText");
+
+      btnUploadT.addEventListener("click", () => {
+        const formData = new FormData();
+        formData.append("pdfFile", inputFileT.files[0]);
+        fetch("/extract-text", {
+          method: "post",
+          body: formData,
+        })
+          .then((response) => {
+            return response.text();
+          })
+          .then((extractedTextT) => {
+            return (resultTextT.value = extractedTextT.trim());
+          });
+      });
+
+      btnCompare.addEventListener("click", () => {
+        var str1 = resultTextT.value;
+        var str2 = resultText.value;
+        string_to_array = function (str) {
+          return str.trim().split(" ");
+        };
+        // var strvalue = parseFloat(str1.replace(/,/g, ""));
+        // const split_string = strvalue.split(",");
+        console.log(string_to_array(str1));
+        console.log(string_to_array(str2));
+
+        var answers = string_to_array(str1),
+          correctAnswers = string_to_array(str2),
+          count = 0,
+          percent;
+        correctAnswers.forEach(function (c) {
+          if (
+            answers.some(function (a) {
+              return a === c;
+            })
+          ) {
+            count++;
+          }
+        });
+        percent = (count * 100) / correctAnswers.length;
+        percentageText.innerHTML =
+          "Matching words: " + count + " Rate: " + percent.toFixed(2) + " %";
+        console.log(
+          "Right Answers: " + count + " Rate: " + percent.toFixed(2) + " %"
+        );
+      });
+    </script>
+  </body>
+</html>
